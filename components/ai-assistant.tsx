@@ -24,7 +24,7 @@ interface Message {
   id: string
   role: 'user' | 'assistant'
   content: string
-  timestamp: Date
+  timestamp: string
 }
 
 const suggestedQuestions = [
@@ -97,18 +97,26 @@ interface AIAssistantProps {
 }
 
 export function AIAssistant({ isOpen, onClose }: AIAssistantProps) {
-  const [messages, setMessages] = useState<Message[]>([
-    {
-      id: '1',
-      role: 'assistant',
-      content: 'Hello! I&apos;m your KubeMind AI assistant. I can help you analyze cluster performance, diagnose issues, and predict potential failures. What would you like to know?',
-      timestamp: new Date(),
-    },
-  ])
+  const [messages, setMessages] = useState<Message[]>([])
   const [input, setInput] = useState('')
   const [isTyping, setIsTyping] = useState(false)
+  const [mounted, setMounted] = useState(false)
   const scrollRef = useRef<HTMLDivElement>(null)
   const inputRef = useRef<HTMLInputElement>(null)
+  const messageIdRef = useRef(0)
+
+  useEffect(() => {
+    setMounted(true)
+    // Initialize with welcome message after mount
+    setMessages([
+      {
+        id: 'welcome',
+        role: 'assistant',
+        content: 'Hello! I\'m your KubeMind AI assistant. I can help you analyze cluster performance, diagnose issues, and predict potential failures. What would you like to know?',
+        timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+      },
+    ])
+  }, [])
 
   useEffect(() => {
     if (isOpen && inputRef.current) {
@@ -126,11 +134,12 @@ export function AIAssistant({ isOpen, onClose }: AIAssistantProps) {
     const messageText = text || input
     if (!messageText.trim()) return
 
+    messageIdRef.current += 1
     const userMessage: Message = {
-      id: Date.now().toString(),
+      id: `user-${messageIdRef.current}`,
       role: 'user',
       content: messageText,
-      timestamp: new Date(),
+      timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
     }
 
     setMessages(prev => [...prev, userMessage])
@@ -141,7 +150,7 @@ export function AIAssistant({ isOpen, onClose }: AIAssistantProps) {
     await new Promise(resolve => setTimeout(resolve, 1500))
 
     const lowerText = messageText.toLowerCase()
-    let response = 'I&apos;m analyzing your request. Based on the current cluster state, I recommend checking the monitoring dashboard for detailed metrics. Is there a specific service or namespace you&apos;d like me to investigate?'
+    let response = 'I\'m analyzing your request. Based on the current cluster state, I recommend checking the monitoring dashboard for detailed metrics. Is there a specific service or namespace you\'d like me to investigate?'
 
     for (const [key, value] of Object.entries(mockResponses)) {
       if (lowerText.includes(key)) {
@@ -150,11 +159,12 @@ export function AIAssistant({ isOpen, onClose }: AIAssistantProps) {
       }
     }
 
+    messageIdRef.current += 1
     const assistantMessage: Message = {
-      id: (Date.now() + 1).toString(),
+      id: `assistant-${messageIdRef.current}`,
       role: 'assistant',
       content: response,
-      timestamp: new Date(),
+      timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
     }
 
     setMessages(prev => [...prev, assistantMessage])
@@ -245,7 +255,7 @@ export function AIAssistant({ isOpen, onClose }: AIAssistantProps) {
                         {message.content}
                       </p>
                       <p className="mt-1 text-[10px] opacity-60">
-                        {message.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                        {message.timestamp}
                       </p>
                     </div>
                   </motion.div>
