@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
 import { Sidebar } from '@/components/sidebar'
 import { Navbar } from '@/components/navbar'
@@ -15,6 +15,17 @@ import { ForecastingSection } from '@/components/forecasting-section'
 export default function DashboardPage() {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
   const [aiAssistantOpen, setAIAssistantOpen] = useState(false)
+  const [mounted, setMounted] = useState(false)
+  const [currentTime, setCurrentTime] = useState('')
+
+  useEffect(() => {
+    setMounted(true)
+    setCurrentTime(new Date().toLocaleTimeString())
+    const interval = setInterval(() => {
+      setCurrentTime(new Date().toLocaleTimeString())
+    }, 1000)
+    return () => clearInterval(interval)
+  }, [])
 
   return (
     <div className="min-h-screen bg-background">
@@ -61,7 +72,7 @@ export default function DashboardPage() {
                   <span className="text-sm font-medium text-success">Live</span>
                 </div>
                 <span className="text-sm text-muted-foreground">
-                  Last updated: {new Date().toLocaleTimeString()}
+                  Last updated: {mounted ? currentTime : '--:--:--'}
                 </span>
               </div>
             </div>

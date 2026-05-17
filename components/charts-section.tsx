@@ -1,6 +1,6 @@
 'use client'
 
-import { useMemo } from 'react'
+import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
 import {
   AreaChart,
@@ -18,6 +18,27 @@ import {
 } from 'recharts'
 import { generateTimeSeriesData, mockPods } from '@/lib/mock-data'
 import { cn } from '@/lib/utils'
+
+// Seeded random number generator for consistent values
+function seededRandom(seed: number) {
+  const x = Math.sin(seed) * 10000
+  return x - Math.floor(x)
+}
+
+// Pre-generated static data to avoid hydration mismatches
+const staticNamespaceData = [
+  { name: 'Production', cpu: 65, memory: 58 },
+  { name: 'Monitoring', cpu: 42, memory: 45 },
+  { name: 'Analytics', cpu: 78, memory: 62 },
+  { name: 'Security', cpu: 35, memory: 41 },
+  { name: 'Testing', cpu: 28, memory: 33 },
+]
+
+const staticNetworkData = Array.from({ length: 25 }, (_, i) => ({
+  time: `${24 - i}h`,
+  inbound: 200 + Math.floor(seededRandom(i * 2) * 500),
+  outbound: 150 + Math.floor(seededRandom(i * 2 + 1) * 400),
+}))
 
 const chartColors = {
   primary: 'oklch(0.7 0.18 250)',
@@ -182,20 +203,12 @@ export function MemoryTrendsChart() {
 }
 
 export function NamespaceResourceChart() {
-  const data = useMemo(() => {
-    const namespaces = ['production', 'monitoring', 'analytics', 'security', 'testing']
-    return namespaces.map(ns => ({
-      name: ns.charAt(0).toUpperCase() + ns.slice(1),
-      cpu: Math.floor(Math.random() * 60) + 20,
-      memory: Math.floor(Math.random() * 50) + 30,
-    }))
-  }, [])
-
+  // Use static data to avoid hydration mismatch
   return (
     <ChartCard title="Namespace Resource Comparison" subtitle="CPU & Memory by namespace" delay={0.3}>
       <div className="h-64">
         <ResponsiveContainer width="100%" height="100%">
-          <BarChart data={data} barGap={4}>
+          <BarChart data={staticNamespaceData} barGap={4}>
             <CartesianGrid strokeDasharray="3 3" stroke="oklch(0.25 0.02 260 / 0.5)" />
             <XAxis
               dataKey="name"
@@ -281,19 +294,12 @@ export function PodRestartAnalytics() {
 }
 
 export function NetworkThroughputChart() {
-  const data = useMemo(() => {
-    return Array.from({ length: 25 }, (_, i) => ({
-      time: `${24 - i}h`,
-      inbound: Math.floor(Math.random() * 500) + 200,
-      outbound: Math.floor(Math.random() * 400) + 150,
-    }))
-  }, [])
-
+  // Use static data to avoid hydration mismatch
   return (
     <ChartCard title="Network Throughput" subtitle="Inbound & Outbound traffic (MB/s)" delay={0.5} className="lg:col-span-2">
       <div className="h-64">
         <ResponsiveContainer width="100%" height="100%">
-          <LineChart data={data}>
+          <LineChart data={staticNetworkData}>
             <CartesianGrid strokeDasharray="3 3" stroke="oklch(0.25 0.02 260 / 0.5)" />
             <XAxis
               dataKey="time"
